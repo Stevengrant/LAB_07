@@ -7,6 +7,7 @@ const cors = require('cors');
 const PORT = process.env.PORT;
 const superagent = require('superagent');
 const GEOCODE_API_KEY = process.env.GEOCODE_API_KEY;
+const WEATHER_API_KEY = process.env.WEATHER_API_KEY;
 
 // middleware ====================================
 const app = express();
@@ -20,31 +21,21 @@ app.get('/', (request, response) => {
 });
 
 // Location page
-app.get('/location', (request, response) => {
-  try {
-    const locationData = searchToLatLng(request, response);
-    //get the
-    // response.send(locationData);
-  } catch (e) {
-    console.log('error:', e);
-
-    //catch the error
-    // response.status(500).send('status 500: things are wrong.');
-  }
-  // response.send(require('./data/geo.json'));
-});
+app.get('/location', searchToLatLng);
 
 // Weather Page
-app.get('/weather', (req, res) => {
-  try {
-    const weather = searchWeather(req.query.location);
-    res.send(weather);
-    //Weather(forcast,time)
-  } catch (e) {
-    console.log('error:', e);
-    res.status(500).send('status 500: things are wrong.');
-  }
-});
+app.get('/weather', searchWeather);
+
+// (req, res) => {
+//   try {
+//     const weather = searchWeather(req.query.location);
+//     res.send(weather);
+//     //Weather(forcast,time)
+//   } catch (e) {
+//     console.log('error:', e);
+//     res.status(500).send('status 500: things are wrong.');
+//   }
+// });
 
 // Wrong Page
 app.use('*', (request, response) => {
@@ -56,27 +47,40 @@ function Location(locationName, formatted_address, lat, lng) {
   (this.search_query = locationName), (this.formatted_query = formatted_address), (this.latitude = lat), (this.longitude = lng);
 }
 
-function Weather(forcast, time) {
-  this.forcast = forcast;
+function Weather(forecast, time) {
+  this.forecast = forecast;
   this.time = time;
 }
 
-function searchWeather(location) {
-  let options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-  const weatherData = require('./data/darksky.json');
-  let res = weatherData.daily.data.map(element => {
-    //https://stackoverflow.com/questions/4631928/convert-utc-epoch-to-local-date
-    let date = new Date(0);
-    date.setUTCSeconds(element.time);
-    return new Weather(element.summary, date.toLocaleDateString('en-US', options));
-  });
+function searchWeather(request, response) {
+  const lat = request.query.data.latitude;
+  const lng = request.query.data.longitude;
 
-  return res;
+  const url = `https://api.darksky.net/forecast/${WEATHER_API_KEY}/${lat},${lng}`;
+  console.log('url: ', url);
+  superagent
+    .get(url)
+    .then(result => {
+      console.log(Object.keys(result.body));
+      //shape data
+      const weatherData = result.body;
+      let res = weatherData.daily.data.map(element => {
+        let date = new Date(element.time * 1000).toDateString();
+        return new Weather(element.summary, date);
+      });
+      console.log(res);
+      response.send(res);
+    })
+    .catch(e => {
+      console.error(e);
+      response.status(500).send('oops');
+    });
+
+  // return res;
 }
 
 //this is whatever the user searched for
 function searchToLatLng(req, res) {
-  console.log('here');
   //GEOCODE_API_KEY
   let locationName = req.query.data;
   const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${locationName}&key=${GEOCODE_API_KEY}`;
@@ -96,11 +100,6 @@ function searchToLatLng(req, res) {
       console.error(e);
       res.status(500).send('oops');
     });
-
-  // console.log('locationName', locationName);
-  // const geoData = require('./data/geo.json');
-  // const location = new Location(locationName, geoData.results[0].formatted_address, geoData.results[0].geometry.location.lat, geoData.results[0].geometry.location.lng);
-  // return location;
 }
 
 app.listen(PORT, () => {
