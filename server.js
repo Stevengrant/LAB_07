@@ -6,13 +6,18 @@ const express = require('express');
 const cors = require('cors');
 const PORT = process.env.PORT;
 
+// middleware ====================================
 const app = express();
 app.use(cors());
 
+// Routes ========================================
+
+// Home page
 app.get('/', (request, response) => {
   response.send('Hello world I\'m live');
 });
 
+// Location page
 app.get('/location', (request, response) => {
   try {
     // console.log('req:',request.query.location)
@@ -27,9 +32,10 @@ app.get('/location', (request, response) => {
   }
   // response.send(require('./data/geo.json'));
 });
+
+// Weather Page
 app.get('/weather', (req, res) => {
   try {
-    console.log(req.query.location);
     const weather = searchWeather(req.query.location);
     res.send(weather);
     //Weather(forcast,time)
@@ -39,32 +45,34 @@ app.get('/weather', (req, res) => {
   }
 });
 
+// Wrong Page
 app.use('*', (request, response) => {
   response.status(404).send('you got to the wrong place.');
 });
 
+// Functions and Object constructors =========================
 function Location(locationName, formatted_address, lat, lng) {
   (this.search_query = locationName), (this.formatted_query = formatted_address), (this.latitude = lat), (this.longitude = lng);
 }
+
 function Weather(forcast, time) {
   this.forcast = forcast;
   this.time = time;
 }
-function searchWeather(location) {
-  const weatherData = require('./data/darksky.json');
-  let res = [];
-  let options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
 
-  weatherData.daily.data.forEach(el => {
+function searchWeather(location) {
+  let options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+  const weatherData = require('./data/darksky.json');
+  let res = weatherData.daily.data.map(element => {
     //https://stackoverflow.com/questions/4631928/convert-utc-epoch-to-local-date
     let date = new Date(0);
-    date.setUTCSeconds(el.time);
-
-    let weather = new Weather(el.summary, date.toLocaleDateString('en-US', options));
-    res.push(weather);
+    date.setUTCSeconds(element.time);
+    return new Weather(element.summary, date.toLocaleDateString('en-US', options));
   });
+
   return res;
 }
+
 //this is whatever the user searched for
 function searchToLatLng(locationName) {
   console.log('locationName', locationName);
