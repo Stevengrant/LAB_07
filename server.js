@@ -8,6 +8,7 @@ const PORT = process.env.PORT;
 const superagent = require('superagent');
 const GEOCODE_API_KEY = process.env.GEOCODE_API_KEY;
 const WEATHER_API_KEY = process.env.WEATHER_API_KEY;
+const EVENTBRITE_API_KEY = process.env.EVENTBRITE_API_KEY;
 
 // middleware ====================================
 const app = express();
@@ -25,12 +26,17 @@ app.get('/location', searchToLatLng);
 
 // Weather Page
 app.get('/weather', searchWeather);
+
+// Events Page
+app.get('/events', searchEvents);
+
 // Wrong Page
 app.use('*', (request, response) => {
   response.status(404).send('you got to the wrong place.');
 });
 
 // Functions and Object constructors =========================
+
 function Location(locationName, formatted_address, lat, lng) {
   (this.search_query = locationName), (this.formatted_query = formatted_address), (this.latitude = lat), (this.longitude = lng);
 }
@@ -38,6 +44,33 @@ function Location(locationName, formatted_address, lat, lng) {
 function Weather(forecast, time) {
   this.forecast = forecast;
   this.time = time;
+}
+function Event(link, name, event_date, summary) {
+  this.link = link;
+  this.name = name;
+  this.event_date = event_date;
+  this.summary = summary;
+}
+
+function searchEvents(request, response) {
+  let lat = request.query.data.latitude;
+  let lng = request.query.data.longitude;
+
+  const url = `https://www.eventbriteapi.com/v3/events/search/?location.latitude=${lat}&location.longitude=${lng}&token=${EVENTBRITE_API_KEY}`;
+
+  superagent
+    .get(url)
+    .then(result => {
+      response.send(
+        result.body.events.map(element => {
+          return new Event(element.url, element.name.text, new Date(element.start.local).toDateString(), element.summary);
+        })
+      );
+    })
+    .catch(e => {
+      console.error(e);
+      response.status(500).send('oops');
+    });
 }
 
 function searchWeather(request, response) {
