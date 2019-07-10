@@ -25,18 +25,6 @@ app.get('/location', searchToLatLng);
 
 // Weather Page
 app.get('/weather', searchWeather);
-
-// (req, res) => {
-//   try {
-//     const weather = searchWeather(req.query.location);
-//     res.send(weather);
-//     //Weather(forcast,time)
-//   } catch (e) {
-//     console.log('error:', e);
-//     res.status(500).send('status 500: things are wrong.');
-//   }
-// });
-
 // Wrong Page
 app.use('*', (request, response) => {
   response.status(404).send('you got to the wrong place.');
@@ -57,26 +45,21 @@ function searchWeather(request, response) {
   const lng = request.query.data.longitude;
 
   const url = `https://api.darksky.net/forecast/${WEATHER_API_KEY}/${lat},${lng}`;
-  console.log('url: ', url);
   superagent
     .get(url)
     .then(result => {
-      console.log(Object.keys(result.body));
       //shape data
       const weatherData = result.body;
       let res = weatherData.daily.data.map(element => {
         let date = new Date(element.time * 1000).toDateString();
         return new Weather(element.summary, date);
       });
-      console.log(res);
       response.send(res);
     })
     .catch(e => {
       console.error(e);
       response.status(500).send('oops');
     });
-
-  // return res;
 }
 
 //this is whatever the user searched for
