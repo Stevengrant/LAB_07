@@ -8,6 +8,9 @@ const PORT = process.env.PORT;
 
 const app = express();
 app.use(cors());
+app.get('/', (req, res) => {
+  res.send('home: /location /weather')
+})
 
 app.get('/location', (request, response) => {
   try {
