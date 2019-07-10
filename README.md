@@ -30,8 +30,54 @@ Steven Grant & Jack Kinne
 
 
 
-Number and name of feature: repo setup
-Estimate of time needed to complete: 30 min
-Start time: 9
+Number and name of feature: setup
+
+Estimate of time needed to complete: 30m
+
+Start time: 900
+
 Finish time: 9:30
-Actual time needed to complete: 30 min
+
+Actual time needed to complete: 30m
+
+
+Number and name of feature: Format
+
+Estimate of time needed to complete: 1h
+
+Start time: 930
+
+Finish time: 1030
+
+Actual time needed to complete: 1h
+
+Number and name of feature: location
+
+Estimate of time needed to complete: 15
+
+Start time: 1030
+
+Finish time: 1045
+
+Actual time needed to complete: 15
+
+Number and name of feature: weather
+
+Estimate of time needed to complete: 15
+
+Start time: 1045
+
+Finish time: 11
+
+Actual time needed to complete: 15
+
+
+Number and name of feature: Add Events 
+
+Estimate of time needed to complete: 1
+
+Start time: 11
+
+Finish time: 1230
+
+Actual time needed to complete: 1:30
