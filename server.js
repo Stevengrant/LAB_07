@@ -9,6 +9,10 @@ const PORT = process.env.PORT;
 const app = express();
 app.use(cors());
 
+app.get('/', (request, response) => {
+  response.send('Hello world I\'m live');
+});
+
 app.get('/location', (request, response) => {
   try {
     // console.log('req:',request.query.location)
@@ -49,13 +53,11 @@ function Weather(forcast, time) {
 function searchWeather(location) {
   const weatherData = require('./data/darksky.json');
   let res = [];
-  var options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+  let options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
 
   weatherData.daily.data.forEach(el => {
     //https://stackoverflow.com/questions/4631928/convert-utc-epoch-to-local-date
-
     let date = new Date(0);
-
     date.setUTCSeconds(el.time);
 
     let weather = new Weather(el.summary, date.toLocaleDateString('en-US', options));
