@@ -5,6 +5,8 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const PORT = process.env.PORT;
+const superagent = require('superagent');
+const GEOCODE_API_KEY = process.env.GEOCODE_API_KEY;
 
 // middleware ====================================
 const app = express();
@@ -20,15 +22,14 @@ app.get('/', (request, response) => {
 // Location page
 app.get('/location', (request, response) => {
   try {
-    // console.log('req:',request.query.location)
-    const locationData = searchToLatLng(request.query.location);
+    const locationData = searchToLatLng(request, response);
     //get the
-    response.send(locationData);
+    // response.send(locationData);
   } catch (e) {
     console.log('error:', e);
 
     //catch the error
-    response.status(500).send('status 500: things are wrong.');
+    // response.status(500).send('status 500: things are wrong.');
   }
   // response.send(require('./data/geo.json'));
 });
@@ -74,11 +75,32 @@ function searchWeather(location) {
 }
 
 //this is whatever the user searched for
-function searchToLatLng(locationName) {
-  console.log('locationName', locationName);
-  const geoData = require('./data/geo.json');
-  const location = new Location(locationName, geoData.results[0].formatted_address, geoData.results[0].geometry.location.lat, geoData.results[0].geometry.location.lng);
-  return location;
+function searchToLatLng(req, res) {
+  console.log('here');
+  //GEOCODE_API_KEY
+  let locationName = req.query.data;
+  const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${locationName}&key=${GEOCODE_API_KEY}`;
+
+  superagent
+    .get(url)
+    .then(result => {
+      let location = {
+        search_query: locationName,
+        formatted_query: result.body.results[0].formatted_address,
+        latitude: result.body.results[0].geometry.location.lat,
+        longitude: result.body.results[0].geometry.location.lng
+      };
+      res.send(location);
+    })
+    .catch(e => {
+      console.error(e);
+      res.status(500).send('oops');
+    });
+
+  // console.log('locationName', locationName);
+  // const geoData = require('./data/geo.json');
+  // const location = new Location(locationName, geoData.results[0].formatted_address, geoData.results[0].geometry.location.lat, geoData.results[0].geometry.location.lng);
+  // return location;
 }
 
 app.listen(PORT, () => {
